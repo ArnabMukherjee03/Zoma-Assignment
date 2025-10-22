@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoma Widget System - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        /* Widget Container */
+        .widget {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            height: 420px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Widget Header */
+        .widget-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .widget-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        /* Dropdown Filter */
+        .widget-filter {
+            position: relative;
+        }
+
+        .filter-dropdown {
+            background: rgba(255,255,255,0.95);
+            color: #667eea;
+            border: none;
+            padding: 8px 32px 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: all 0.3s ease;
+        }
+
+        .filter-dropdown:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .filter-dropdown:focus {
+            outline: 2px solid rgba(255,255,255,0.5);
+            outline-offset: 2px;
+        }
+
+        /* Widget Body */
+        .widget-body {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Content State */
+        .content-state {
+            width: 100%;
+        }
+
+        .weather-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .weather-temp {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .weather-detail {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .weather-detail-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .weather-detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .stock-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .stock-item:hover {
+            background: #e9ecef;
+        }
+
+        .stock-symbol {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .stock-name {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .stock-price {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stock-change {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .stock-change.positive {
+            color: #10b981;
+            background: #d1fae5;
+        }
+
+        .stock-change.negative {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        /* Error State */
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            color: #ef4444;
+        }
+
+        .error-message {
+            color: #666;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .retry-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            background: #5568d3;
+        }
+
+        /* State Toggle Buttons */
+        .demo-controls {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .demo-controls h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .state-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .state-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .state-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zoma Widget System - Dashboard Demo</h1>
+        
+        <div class="dashboard">
+            <!-- Weather Widget -->
+            <div class="widget" id="weatherWidget">
+                <div class="widget-header">
+                    <div class="widget-title">🌤️ Weather Forecast</div>
+                    <div class="widget-filter">
+                        <select class="filter-dropdown" onchange="handleFilterChange(this, 'weatherWidget')">
+                            <option value="day">Last Day</option>
+                            <option value="month">Last Month</option>
+                            <option value="year">Last Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="widget-body" id="weatherBody">
+                    <!-- Content will be injected here -->
+                </div>
+            </div>
+
+            <!-- Stock Widget -->
+            <div class="widget" id="stockWidget">
+                <div class="widget-header">
+                    <div class="widget-title">📈 Stock Trends</div>
+                    <div class="widget-filter">
+                        <select class="filter-dropdown" onchange="handleFilterChange(this, 'stockWidget')">
+                            <option value="day">Last Day</option>
+                            <option value="month">Last Month</option>
+                            <option value="year">Last Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="widget-body" id="stockBody">
+                    <!-- Content will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="demo-controls">
+            <h3>Demo Controls - Toggle Widget States</h3>
+            <div class="state-buttons">
+                <button class="state-btn" onclick="showState('loading')">Show Loading State</button>
+                <button class="state-btn" onclick="showState('content')">Show Content State</button>
+                <button class="state-btn" onclick="showState('error')">Show Error State</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Widget state templates
+        const states = {
+            loading: `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading data...</div>
+                </div>
+            `,
+            weatherContent: `
+                <div class="content-state">
+                    <div class="weather-content">
+                        <div class="weather-main">
+                            <div>
+                                <div class="weather-temp">72°F</div>
+                                <div style="color: #666; font-size: 1.1rem;">Partly Cloudy</div>
+                                <div style="color: #999; font-size: 0.9rem; margin-top: 5px;">Tel Aviv, Israel</div>
+                            </div>
+                            <div class="weather-icon">⛅</div>
+                        </div>
+                        <div class="weather-details">
+                            <div class="weather-detail">
+                                <div class="weather-detail-label">Humidity</div>
+                                <div class="weather-detail-value">65%</div>
+                            </div>
+                            <div class="weather-detail">
+                                <div class="weather-detail-label">Wind</div>
+                                <div class="weather-detail-value">12 mph</div>
+                            </div>
+                            <div class="weather-detail">
+                                <div class="weather-detail-label">Pressure</div>
+                                <div class="weather-detail-value">1013 mb</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            stockContent: `
+                <div class="content-state">
+                    <div class="stock-content">
+                        <div class="stock-item">
+                            <div>
+                                <div class="stock-symbol">AAPL</div>
+                                <div class="stock-name">Apple Inc.</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="stock-price">$178.45</div>
+                                <div class="stock-change positive">+2.34%</div>
+                            </div>
+                        </div>
+                        <div class="stock-item">
+                            <div>
+                                <div class="stock-symbol">MSFT</div>
+                                <div class="stock-name">Microsoft Corp.</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="stock-price">$412.89</div>
+                                <div class="stock-change positive">+1.87%</div>
+                            </div>
+                        </div>
+                        <div class="stock-item">
+                            <div>
+                                <div class="stock-symbol">GOOGL</div>
+                                <div class="stock-name">Alphabet Inc.</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="stock-price">$139.23</div>
+                                <div class="stock-change negative">-0.54%</div>
+                            </div>
+                        </div>
+                        <div class="stock-item">
+                            <div>
+                                <div class="stock-symbol">TSLA</div>
+                                <div class="stock-name">Tesla Inc.</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="stock-price">$242.67</div>
+                                <div class="stock-change positive">+3.21%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            error: `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-message">
+                        Failed to load data.<br>
+                        Please check your connection and try again.
+                    </div>
+                    <button class="retry-btn" onclick="showState('loading'); setTimeout(() => showState('content'), 1500)">
+                        Retry
+                    </button>
+                </div>
+            `
+        };
+
+        // Initialize widgets with content state
+        function initWidgets() {
+            document.getElementById('weatherBody').innerHTML = states.weatherContent;
+            document.getElementById('stockBody').innerHTML = states.stockContent;
+        }
+
+        // Show different states
+        function showState(state) {
+            const weatherBody = document.getElementById('weatherBody');
+            const stockBody = document.getElementById('stockBody');
+
+            if (state === 'loading') {
+                weatherBody.innerHTML = states.loading;
+                stockBody.innerHTML = states.loading;
+            } else if (state === 'content') {
+                weatherBody.innerHTML = states.weatherContent;
+                stockBody.innerHTML = states.stockContent;
+            } else if (state === 'error') {
+                weatherBody.innerHTML = states.error;
+                stockBody.innerHTML = states.error;
+            }
+        }
+
+        // Handle filter dropdown change
+        function handleFilterChange(selectElement, widgetId) {
+            const widget = document.getElementById(widgetId);
+            const body = widget.querySelector('.widget-body');
+            const isWeather = widgetId === 'weatherWidget';
+            
+            // Simulate data reload
+            body.innerHTML = states.loading;
+            setTimeout(() => {
+                body.innerHTML = isWeather ? states.weatherContent : states.stockContent;
+            }, 800);
+        }
+
+        // Initialize on load
+        initWidgets();
+    </script>
+</body>
+</html>
